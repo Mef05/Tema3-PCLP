@@ -1,0 +1,5 @@
+1
+SELECT nume FROM studenti;
+200
+6265
+6+55649
