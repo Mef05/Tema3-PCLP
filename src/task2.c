@@ -1,5 +1,8 @@
 #include "task2.h"
 
+#define INIT_CHAR 256
+#define INIT_LINE 100
+
 void display_fields(void *data, const char *fields, const char *table) {
   if (strcmp(table, "studenti") == 0) {
     student *st = (student *)data;
@@ -7,7 +10,7 @@ void display_fields(void *data, const char *fields, const char *table) {
       printf("%d %s %d %c %.2f\n", st->id, st->nume, st->an_studiu, st->statut,
              st->medie_generala);
     } else {
-      char fields_copy[256];
+      char fields_copy[INIT_CHAR];
       strcpy(fields_copy, fields);
       char *field = strtok(fields_copy, ",");
       while (field != NULL) {
@@ -31,7 +34,7 @@ void display_fields(void *data, const char *fields, const char *table) {
     if (strcmp(fields, "*") == 0) {
       printf("%d %s %s\n", mt->id, mt->nume, mt->nume_titular);
     } else {
-      char fields_copy[256];
+      char fields_copy[INIT_CHAR];
       strcpy(fields_copy, fields);
       char *field = strtok(fields_copy, ",");
       while (field != NULL) {
@@ -52,7 +55,7 @@ void display_fields(void *data, const char *fields, const char *table) {
       printf("%d %d %.2f %.2f %.2f\n", in->id_student, in->id_materie,
              in->note[0], in->note[1], in->note[2]);
     } else {
-      char fields_copy[256];
+      char fields_copy[INIT_CHAR];
       strcpy(fields_copy, fields);
       char *field = strtok(fields_copy, ",");
       while (field != NULL) {
@@ -71,7 +74,7 @@ void display_fields(void *data, const char *fields, const char *table) {
 }
 
 int main(int argc, char *argv[]) {
-  char filename[256];
+  char filename[INIT_CHAR];
   strcpy(filename, argv[1]);
 
   secretariat *s = citeste_secretariat(filename);
@@ -79,14 +82,21 @@ int main(int argc, char *argv[]) {
   int num_of_comands = 0;
   scanf("%d", &num_of_comands);
   char **comands = (char **)malloc(num_of_comands * sizeof(char *));
+  if (comands == NULL) {
+    return -1;
+  }
 
   int index = 0;
-  char ch;
-  char buffer[100];
+  char ch = 0;
+  char *buffer = (char *)malloc(INIT_LINE * sizeof(char));
+  if (buffer == NULL) {
+    return -1;
+  }
+
   for (int i = 0; i < num_of_comands; i++) {
     index = 0;
 
-    while ((ch = getchar()) != EOF) {
+    while ((ch = (char)getchar()) != EOF) {
       if (ch == ';') {
         buffer[index] = '\0';
         break;
@@ -95,6 +105,12 @@ int main(int argc, char *argv[]) {
       } else if (index < sizeof(buffer) - 1) {
         buffer[index++] = ch;
       }
+      if (index = INIT_LINE - 1) {
+        buffer = (char *)realloc(buffer, 2 * INIT_LINE * sizeof(char));
+      }
+      if (buffer == NULL) {
+        return -1;
+      }
     }
 
     comands[i] = (char *)malloc((index + 1) * sizeof(char));
@@ -102,6 +118,8 @@ int main(int argc, char *argv[]) {
       comands[i][j] = buffer[j];
     }
   }
+
+  free(buffer);
 
   for (int i = 0; i < num_of_comands; i++) {
     printf("%s\n", comands[i]);

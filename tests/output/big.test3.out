@@ -1,2 +1,2 @@
-SELECT nume, medie_generala FROM studenti WHERE medie_generala > 5.0
-SELECT nume_titular FROM materii WHERE id = 3
+S
+S

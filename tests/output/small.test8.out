@@ -1,2 +1,2 @@
-DELETE FROM studenti WHERE id = 0
-SELECT nume, medie_generala FROM studenti
+D
+S
