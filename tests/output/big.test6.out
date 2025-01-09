@@ -1,6 +1,6 @@
-U
-U
-U
-U
-S
-S
+Comanda: UPDATE studenti SET an_studiu = 4 WHERE id = 4 | Tip: UPDATE | Lenght: 46 | Camp: id | Operator: = | Valoare: 4 | 
+Comanda: UPDATE inrolari SET id_materie = 7 WHERE id_student = 1 | Tip: UPDATE | Lenght: 55 | Camp: id_student | Operator: = | Valoare: 1 | 
+Comanda: UPDATE studenti SET statut = b WHERE medie_generala >= 8.0 AND an_studiu = 3 | Tip: UPDATE | Lenght: 76 | Camp: medie_generala | Operator: >= | Valoare: 8.0 | Camp: an_studiu | Operator: = | Valoare: 3 | 
+Comanda: UPDATE studenti SET statut = t WHERE medie_generala < 8.0 AND an_studiu = 3 | Tip: UPDATE | Lenght: 75 | Camp: medie_generala | Operator: < | Valoare: 8.0 | Camp: an_studiu | Operator: = | Valoare: 3 | 
+Comanda: SELECT id, nume, an_studiu, medie_generala, statut FROM studenti | Tip: SELECT | Lenght: 64 | 
+Comanda: SELECT id_student, id_materie FROM inrolari | Tip: SELECT | Lenght: 43 | 

@@ -1,2 +1,2 @@
-S
-S
+Comanda: SELECT * FROM materii | Tip: SELECT | Lenght: 21 | 
+Comanda: SELECT note, id_materie FROM inrolari | Tip: SELECT | Lenght: 37 | 

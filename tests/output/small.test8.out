@@ -1,2 +1,2 @@
-D
-S
+Comanda: DELETE FROM studenti WHERE id = 0 | Tip: DELETE | Lenght: 33 | Camp: id | Operator: = | Valoare: 0 | 
+Comanda: SELECT nume, medie_generala FROM studenti | Tip: SELECT | Lenght: 41 | 

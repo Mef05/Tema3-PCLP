@@ -1,2 +1,2 @@
-S
-S
+Comanda: SELECT nume, medie_generala FROM studenti WHERE medie_generala > 5.0 | Tip: SELECT | Lenght: 68 | Camp: medie_generala | Operator: > | Valoare: 5.0 | 
+Comanda: SELECT nume_titular FROM materii WHERE id = 3 | Tip: SELECT | Lenght: 45 | Camp: id | Operator: = | Valoare: 3 | 

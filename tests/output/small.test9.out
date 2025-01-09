@@ -1,7 +1,7 @@
-D
-U
-U
-U
-D
-U
-S
+Comanda: DELETE FROM studenti WHERE statut = t AND medie_generala < 7.0 | Tip: DELETE | Lenght: 62 | Camp: statut | Operator: = | Valoare: t | Camp: medie_generala | Operator: < | Valoare: 7.0 | 
+Comanda: UPDATE studenti SET an_studiu = 3 WHERE statut = b AND medie_generala > 8.0 | Tip: UPDATE | Lenght: 75 | Camp: statut | Operator: = | Valoare: b | Camp: medie_generala | Operator: > | Valoare: 8.0 | 
+Comanda: UPDATE inrolari SET note = 4.0 4.0 1.0 WHERE id_student = 2 AND id_materie = 8 | Tip: UPDATE | Lenght: 78 | Camp: id_student | Operator: = | Valoare: 2 | Camp: id_materie | Operator: = | Valoare: 8 | 
+Comanda: UPDATE studenti SET statut = t WHERE id = 1 | Tip: UPDATE | Lenght: 43 | Camp: id | Operator: = | Valoare: 1 | 
+Comanda: DELETE FROM inrolari WHERE id_materie = 2 | Tip: DELETE | Lenght: 41 | Camp: id_materie | Operator: = | Valoare: 2 | 
+Comanda: UPDATE inrolari SET note = 5.0 5.0 0.0 WHERE id_materie = 0 | Tip: UPDATE | Lenght: 59 | Camp: id_materie | Operator: = | Valoare: 0 | 
+Comanda: SELECT id, nume, an_studiu, statut, medie_generala FROM studenti | Tip: SELECT | Lenght: 64 | 
