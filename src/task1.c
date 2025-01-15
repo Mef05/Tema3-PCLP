@@ -2,6 +2,8 @@
 
 #define MAX_LINE 256
 #define MAX_NAME 40
+#define THOUSAND 1000
+#define TEN 10
 
 float calculeaza_medie_student(int student_id, inrolare *inrolari,
                                int nr_inrolari) {
@@ -20,17 +22,17 @@ float calculeaza_medie_student(int student_id, inrolare *inrolari,
   }
 
   medie /= (float)inrolari_student;
-  medie *= 1000;
+  medie *= THOUSAND;
 
-  while ((int)medie % 10 != 0) {
-    if ((int)medie % 10 >= 4) {
+  while ((int)medie % TEN != 0) {
+    if ((int)medie % TEN >= 4) {
       medie += 1;
     } else {
       medie -= 1;
     }
   }
 
-  medie /= 1000;
+  medie /= THOUSAND;
 
   return medie;
 }

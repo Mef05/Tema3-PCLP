@@ -1,7 +1,10 @@
 #include "task2.h"
 
 #define INIT_CHAR 256
-#define INIT_LINE 200
+#define THOUSAND 1000
+#define TEN 10
+#define WHEREL 6
+#define AND "AND"
 
 typedef struct {
   char *comanda;
@@ -90,12 +93,12 @@ void extract_init_condition(comanda *comanda) {
   snprintf(comanda_copy, comanda->length + 1, "%s", comanda->comanda);
 
   char *where = 0;
-  char *and = 0;
+  char *andp = 0;
 
   if (strstr(comanda_copy, "AND") != NULL) {
     comanda->conditions = (char **)malloc(2 * sizeof(char *));
     comanda->num_of_conditions = 2;
-    and = strstr(comanda_copy, "AND");
+    andp = strstr(comanda_copy, "AND");
     where = strstr(comanda_copy, "WHERE");
   } else if (strstr(comanda_copy, "WHERE") != NULL) {
     comanda->conditions = (char **)malloc(sizeof(char *));
@@ -108,8 +111,8 @@ void extract_init_condition(comanda *comanda) {
     return;
   }
 
-  and += 4;
-  where += 6;
+  andp += 4;
+  where += WHEREL;
   char buffer[INIT_CHAR];
   int index = 0;
 
@@ -123,8 +126,8 @@ void extract_init_condition(comanda *comanda) {
 
   if (comanda->num_of_conditions == 2) {
     index = 0;
-    while (*and != '\0') {
-      buffer[index++] = *(and++);
+    while (*andp != '\0') {
+      buffer[index++] = *(andp++);
     }
     buffer[index] = '\0';
 
@@ -196,8 +199,10 @@ void extract_info(comanda comanda, void *info) {
   snprintf(comanda_copy, comanda.length + 1, "%s", comanda.comanda);
 
   if (comanda.operation == SELECT) {
-    selectInfo sInfo =
-        (selectInfo){.campuri = NULL, .num_of_campuri = 0, .tabel = NULL};
+    selectInfo sInfo;
+    sInfo.campuri = NULL;
+    sInfo.num_of_campuri = 0;
+    sInfo.tabel = NULL;
 
     char *token = strtok(comanda_copy, " ");
 
@@ -211,14 +216,19 @@ void extract_info(comanda comanda, void *info) {
 
     token = strtok(NULL, " ");
     if (is_lowercase(token)) {
-      sInfo.tabel = (char *)malloc(strlen(token) + 1);
+      sInfo.tabel = (char *)malloc((strlen(token) + 1) * sizeof(char));
+      if (sInfo.tabel == NULL) {
+        return;
+      }
       snprintf(sInfo.tabel, strlen(token) + 1, "%s", token);
     }
 
     *(selectInfo *)info = sInfo;
   } else if (comanda.operation == UPDATE) {
-    updateInfo uInfo =
-        (updateInfo){.tabel = NULL, .camp = NULL, .valoare = NULL};
+    updateInfo uInfo;
+    uInfo.tabel = NULL;
+    uInfo.camp = NULL;
+    uInfo.valoare = NULL;
 
     char *token = strtok(comanda_copy, " ");
     token = strtok(NULL, " ");
@@ -241,7 +251,6 @@ void extract_info(comanda comanda, void *info) {
 
     uInfo.camp = (char *)calloc(strlen(set[0]) + 1, sizeof(char));
     snprintf(uInfo.camp, strlen(set[0]) + 1, "%s", set[0]);
-    free(set[0]);
     int val_len = 0;
 
     for (int i = 1; i < set_size; i++) {
@@ -250,13 +259,18 @@ void extract_info(comanda comanda, void *info) {
     uInfo.valoare = (char *)calloc(val_len, sizeof(char));
 
     for (int i = 1; i < set_size; i++) {
-      strcat(uInfo.valoare, set[i]);
+      snprintf(uInfo.valoare + strlen(uInfo.valoare),
+               val_len - strlen(uInfo.valoare), "%s", set[i]);
       if (i != set_size - 1) {
-        strcat(uInfo.valoare, " ");
+        snprintf(uInfo.valoare + strlen(uInfo.valoare),
+                 val_len - strlen(uInfo.valoare), " ");
       }
     }
 
     remove_char(uInfo.valoare, '"');
+    for (int i = 0; i < set_size; i++) {
+      free(set[i]);
+    }
     free(set);
 
     *(updateInfo *)info = uInfo;
@@ -273,26 +287,6 @@ void extract_info(comanda comanda, void *info) {
   }
 
   free(comanda_copy);
-}
-
-char *intToString(int num) {
-  int size = snprintf(NULL, 0, "%d", num) + 1;
-  char *str = malloc(size);
-  if (str == NULL) {
-    exit(1);
-  }
-  snprintf(str, size, "%d", num);
-  return str;
-}
-
-char *floatToString(float num) {
-  int size = snprintf(NULL, 0, "%f", num) + 1;
-  char *str = malloc(size);
-  if (str == NULL) {
-    exit(1);
-  }
-  snprintf(str, size, "%f", num);
-  return str;
 }
 
 bool verify_conditions(comanda comanda, secretariat s, int index) {
@@ -313,8 +307,11 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
     split_condition(comanda.conditions[i], camp, operator, valoare);
 
     if (comanda.operation == SELECT) {
-      selectInfo info =
-          (selectInfo){.campuri = NULL, .num_of_campuri = 0, .tabel = NULL};
+      selectInfo info;
+      info.campuri = NULL;
+      info.num_of_campuri = 0;
+      info.tabel = NULL;
+
       extract_info(comanda, &info);
 
       if (!strcmp(info.tabel, "studenti")) {
@@ -322,26 +319,38 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].id == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.studenti[index].id < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.studenti[index].id > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.studenti[index].id <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.studenti[index].id >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.studenti[index].id != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -349,13 +358,17 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.studenti[index].nume, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
         } else if (strcmp(camp, "an_studiu") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (!strcmp(intToString(s.studenti[index].an_studiu), valoare)) {
+            if (s.studenti[index].an_studiu == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -363,6 +376,8 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].statut == valoare[0]) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -370,26 +385,38 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].medie_generala == atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.studenti[index].medie_generala < atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.studenti[index].medie_generala > atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.studenti[index].medie_generala <= atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.studenti[index].medie_generala >= atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.studenti[index].medie_generala != atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         }
@@ -398,38 +425,54 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.materii[index].id == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.materii[index].id < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.materii[index].id > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.materii[index].id <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.materii[index].id >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.materii[index].id != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "nume")) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.materii[index].nume, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "nume_titular")) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.materii[index].nume_titular, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         }
@@ -438,52 +481,76 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.inrolari[index].id_student == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.inrolari[index].id_student < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.inrolari[index].id_student > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.inrolari[index].id_student <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.inrolari[index].id_student >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.inrolari[index].id_student != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "id_materie")) {
           if (strcmp(operator, "=") == 0) {
             if (s.inrolari[index].id_materie == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.inrolari[index].id_materie < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.inrolari[index].id_materie > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.inrolari[index].id_materie <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.inrolari[index].id_materie >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.inrolari[index].id_materie != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "note")) {
@@ -497,10 +564,14 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           }
         }
       }
+
+      free_select_info(&info);
 
     } else if (comanda.operation == UPDATE) {
-      updateInfo info =
-          (updateInfo){.tabel = NULL, .camp = NULL, .valoare = NULL};
+      updateInfo info;
+      info.tabel = NULL;
+      info.camp = NULL;
+      info.valoare = NULL;
       extract_info(comanda, &info);
 
       if (!strcmp(info.tabel, "studenti")) {
@@ -508,26 +579,38 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].id == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.studenti[index].id < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.studenti[index].id > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.studenti[index].id <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.studenti[index].id >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.studenti[index].id != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -535,13 +618,17 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.studenti[index].nume, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
         } else if (strcmp(camp, "an_studiu") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (!strcmp(intToString(s.studenti[index].an_studiu), valoare)) {
+            if (s.studenti[index].an_studiu == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -549,6 +636,8 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].statut == valoare[0]) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -556,26 +645,38 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].medie_generala == atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.studenti[index].medie_generala < atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.studenti[index].medie_generala > atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.studenti[index].medie_generala <= atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.studenti[index].medie_generala >= atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.studenti[index].medie_generala != atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         }
@@ -584,38 +685,54 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.materii[index].id == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.materii[index].id < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.materii[index].id > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.materii[index].id <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.materii[index].id >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.materii[index].id != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "nume")) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.materii[index].nume, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "nume_titular")) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.materii[index].nume_titular, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         }
@@ -624,52 +741,76 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.inrolari[index].id_student == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.inrolari[index].id_student < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.inrolari[index].id_student > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.inrolari[index].id_student <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.inrolari[index].id_student >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.inrolari[index].id_student != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "id_materie")) {
           if (strcmp(operator, "=") == 0) {
             if (s.inrolari[index].id_materie == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.inrolari[index].id_materie < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.inrolari[index].id_materie > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.inrolari[index].id_materie <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.inrolari[index].id_materie >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.inrolari[index].id_materie != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "note")) {
@@ -683,6 +824,7 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           }
         }
       }
+      free_update_info(&info);
 
     } else if (comanda.operation == DELETE) {
       deleteInfo info = (deleteInfo){.tabel = NULL};
@@ -693,26 +835,38 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].id == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.studenti[index].id < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.studenti[index].id > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.studenti[index].id <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.studenti[index].id >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.studenti[index].id != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -720,6 +874,8 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.studenti[index].nume, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -727,6 +883,8 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].an_studiu == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -734,6 +892,8 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].statut == valoare[0]) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
 
@@ -741,26 +901,38 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.studenti[index].medie_generala == atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.studenti[index].medie_generala < atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.studenti[index].medie_generala > atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.studenti[index].medie_generala <= atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.studenti[index].medie_generala >= atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.studenti[index].medie_generala != atof(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         }
@@ -769,38 +941,54 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.materii[index].id == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.materii[index].id < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.materii[index].id > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.materii[index].id <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.materii[index].id >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.materii[index].id != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "nume")) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.materii[index].nume, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "nume_titular")) {
           if (strcmp(operator, "=") == 0) {
             if (!strcmp(s.materii[index].nume_titular, valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         }
@@ -809,52 +997,76 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           if (strcmp(operator, "=") == 0) {
             if (s.inrolari[index].id_student == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.inrolari[index].id_student < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.inrolari[index].id_student > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.inrolari[index].id_student <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.inrolari[index].id_student >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.inrolari[index].id_student != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "id_materie")) {
           if (strcmp(operator, "=") == 0) {
             if (s.inrolari[index].id_materie == atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<") == 0) {
             if (s.inrolari[index].id_materie < atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">") == 0) {
             if (s.inrolari[index].id_materie > atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "<=") == 0) {
             if (s.inrolari[index].id_materie <= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, ">=") == 0) {
             if (s.inrolari[index].id_materie >= atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           } else if (strcmp(operator, "!=") == 0) {
             if (s.inrolari[index].id_materie != atoi(valoare)) {
               flag = true;
+            } else {
+              flag = false;
             }
           }
         } else if (!strcmp(camp, "note")) {
@@ -868,15 +1080,51 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
           }
         }
       }
+      free_delete_info(&info);
     }
   }
   return flag;
 }
 
+float recalculeaza_medie_student(int student_id, inrolare *inrolari,
+                                 int nr_inrolari) {
+  int inrolari_student = 0;
+  float medie = 0;
+  for (int i = 0; i < nr_inrolari; i++) {
+    if (inrolari[i].id_student == student_id) {
+      inrolari_student++;
+      medie +=
+          (inrolari[i].note[0] + inrolari[i].note[1] + inrolari[i].note[2]);
+    }
+  }
+
+  if (inrolari_student == 0) {
+    return 0;
+  }
+
+  medie /= (float)inrolari_student;
+  medie *= THOUSAND;
+
+  while ((int)medie % TEN != 0) {
+    if ((int)medie % TEN >= 4) {
+      medie += 1;
+    } else {
+      medie -= 1;
+    }
+  }
+
+  medie /= THOUSAND;
+
+  return medie;
+}
+
 void apply_comand(comanda comanda, secretariat *s) {
   if (comanda.operation == SELECT) {
-    selectInfo info =
-        (selectInfo){.campuri = NULL, .num_of_campuri = 0, .tabel = NULL};
+    selectInfo info;
+    info.campuri = NULL;
+    info.num_of_campuri = 0;
+    info.tabel = NULL;
+
     extract_info(comanda, &info);
 
     if (!strcmp(info.tabel, "studenti")) {
@@ -962,9 +1210,13 @@ void apply_comand(comanda comanda, secretariat *s) {
       }
     }
     free_select_info(&info);
+
   } else if (comanda.operation == UPDATE) {
-    updateInfo info =
-        (updateInfo){.tabel = NULL, .camp = NULL, .valoare = NULL};
+    updateInfo info;
+    info.tabel = NULL;
+    info.camp = NULL;
+    info.valoare = NULL;
+
     extract_info(comanda, &info);
 
     if (!strcmp(info.tabel, "studenti")) {
@@ -1004,17 +1256,57 @@ void apply_comand(comanda comanda, secretariat *s) {
             s->inrolari[j].note[1] = note[1];
             s->inrolari[j].note[2] = note[2];
 
-            float medie = (note[0] + note[1] + note[2]) / 3;
+          } else if (!strcmp(info.camp, "id_student")) {
+            s->inrolari[j].id_student = atoi(info.valoare);
+          } else if (!strcmp(info.camp, "id_materie")) {
+            s->inrolari[j].id_materie = atoi(info.valoare);
           }
+          s->studenti[s->inrolari[j].id_student].medie_generala =
+              recalculeaza_medie_student(s->inrolari[j].id_student, s->inrolari,
+                                         s->nr_inrolari);
         }
       }
     }
+    free_update_info(&info);
+  } else if (comanda.operation == DELETE) {
+    deleteInfo info = (deleteInfo){.tabel = NULL};
+    extract_info(comanda, &info);
+
+    if (!strcmp(info.tabel, "studenti")) {
+      for (int j = 0; j < s->nr_studenti; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          for (int i = j; i < s->nr_studenti - 1; i++) {
+            s->studenti[i] = s->studenti[i + 1];
+          }
+          s->nr_studenti--;
+        }
+      }
+    } else if (!strcmp(info.tabel, "materii")) {
+      for (int j = 0; j < s->nr_materii; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          for (int i = j; i < s->nr_materii - 1; i++) {
+            s->materii[i] = s->materii[i + 1];
+          }
+          s->nr_materii--;
+        }
+      }
+    } else if (!strcmp(info.tabel, "inrolari")) {
+      for (int j = 0; j < s->nr_inrolari; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          for (int i = j; i < s->nr_inrolari - 1; i++) {
+            s->inrolari[i] = s->inrolari[i + 1];
+          }
+          s->nr_inrolari--;
+        }
+      }
+    }
+    free_delete_info(&info);
   }
 }
 
 int main(int argc, char *argv[]) {
   char filename[INIT_CHAR];
-  strcpy(filename, argv[1]);
+  snprintf(filename, sizeof(filename), "%s", argv[1]);
 
   secretariat *s = citeste_secretariat(filename);
 
@@ -1027,7 +1319,7 @@ int main(int argc, char *argv[]) {
 
   int index = 0;
   char ch = 0;
-  char *buffer = (char *)malloc(INIT_LINE * sizeof(char));
+  char *buffer = (char *)malloc(INIT_CHAR * sizeof(char));
   if (buffer == NULL) {
     return -1;
   }
@@ -1062,29 +1354,6 @@ int main(int argc, char *argv[]) {
     apply_comand(comands[i], s);
   }
 
-  // for (int i = 0; i < num_of_comands; i++) {
-  //   printf("Comanda: %s | Tip: %s | Lenght: %d | ", comands[i].comanda,
-  //          comands[i].operation == SELECT   ? "SELECT"
-  //          : comands[i].operation == UPDATE ? "UPDATE"
-  //                                           : "DELETE",
-  //          comands[i].length);
-
-  //   for (int j = 0; j < comands[i].num_of_conditions; j++) {
-  //     printf("Condition: %s ", comands[i].conditions[j]);
-  //   }
-  //   for (int j = 0; j < comands[i].num_of_conditions; j++) {
-  //     char camp[INIT_CHAR];
-  //     char operator[INIT_CHAR];
-  //     char valoare[INIT_CHAR];
-
-  //     split_condition(comands[i].conditions[j], camp, operator, &
-  //     valoare); printf("Camp: %s | Operator: %s | Valoare: %s | ", camp,
-  //     operator,
-  //            valoare);
-  //   }
-
-  //   printf("\n");
-  // }
   elibereaza_secretariat(&s);
   free_comands(comands, num_of_comands);
   return 0;

@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "task2.h": "c"
+        "task2.h": "c",
+        "stdio.h": "c",
+        "structuri.h": "c",
+        "task1.h": "c"
     }
 }
