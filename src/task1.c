@@ -1,21 +1,7 @@
-
-
 #include "task1.h"
 
 #define MAX_LINE 256
 #define MAX_NAME 40
-
-float round_to_two_decimals(float num) {
-  num = num * 100.0f;
-  const float diff = num - (int)num;
-
-  if (num >= 0) {
-    num = (num + diff);
-  } else {
-    num = (num - diff);
-  }
-  return num / 100.0f;
-}
 
 float calculeaza_medie_student(int student_id, inrolare *inrolari,
                                int nr_inrolari) {
@@ -34,8 +20,19 @@ float calculeaza_medie_student(int student_id, inrolare *inrolari,
   }
 
   medie /= (float)inrolari_student;
+  medie *= 1000;
 
-  return round_to_two_decimals(medie);
+  while ((int)medie % 10 != 0) {
+    if ((int)medie % 10 >= 4) {
+      medie += 1;
+    } else {
+      medie -= 1;
+    }
+  }
+
+  medie /= 1000;
+
+  return medie;
 }
 
 secretariat *citeste_secretariat(const char *nume_fisier) {
