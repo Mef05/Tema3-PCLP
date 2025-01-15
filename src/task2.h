@@ -5,4 +5,5 @@
 #include <string.h>
 
 #include "../include/structuri.h"
+// #include "task1.c"
 #include "task1.h"

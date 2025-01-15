@@ -1,2 +1,10 @@
-Comanda: DELETE FROM studenti WHERE id = 0 | Tip: DELETE | Lenght: 33 | Camp: id | Operator: = | Valoare: 0 | 
-Comanda: SELECT nume, medie_generala FROM studenti | Tip: SELECT | Lenght: 41 | 
+Nicolescu Elena 7.62
+Pogoran Adrian 2.84
+Trandaf Denisa 6.22
+Ionescu Teodor 5.52
+Popescu Adrian 7.74
+Encea Cristina 7.14
+Ionescu Andrei 4.66
+Roman Denisa 5.23
+Ionescu Florentina 5.84
+Petrescu Florentina 6.16

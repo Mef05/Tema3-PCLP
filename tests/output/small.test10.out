@@ -1,3 +1,13 @@
-Comanda: DELETE FROM materii WHERE id >= 0 | Tip: DELETE | Lenght: 33 | Camp: id | Operator: >= | Valoare: 0 | 
-Comanda: SELECT * FROM materii | Tip: SELECT | Lenght: 21 | 
-Comanda: SELECT id, nume FROM studenti WHERE an_studiu = 3 AND statut = t | Tip: SELECT | Lenght: 64 | Camp: an_studiu | Operator: = | Valoare: 3 | Camp: statut | Operator: = | Valoare: t | 
+0 USO Roman Florentina
+1 PCLP1 Pancila Daniela
+2 SDA Ionescu Diana
+3 Fizica Petrescu Cristina
+4 SO Gheorghita Daniela
+5 Analiza Tudor Alina
+6 MN Sandu Nicoleta
+7 EGC Petic Vlad
+8 Algebra Sarbu Daniela
+0 Nicolescu Elena
+4 Popescu Adrian
+5 Encea Cristina
+9 Petrescu Florentina

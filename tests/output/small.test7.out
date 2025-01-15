@@ -1,4 +1,7 @@
-Comanda: UPDATE inrolari SET note = 2.50 3.0 5.0 WHERE id_student = 1 AND id_materie = 8 | Tip: UPDATE | Lenght: 79 | Camp: id_student | Operator: = | Valoare: 1 | Camp: id_materie | Operator: = | Valoare: 8 | 
-Comanda: UPDATE studenti SET nume = "Andrei Marian" WHERE id = 5 | Tip: UPDATE | Lenght: 55 | Camp: id | Operator: = | Valoare: 5 | 
-Comanda: SELECT id_student, id_materie, note FROM inrolari WHERE id_student = 1 | Tip: SELECT | Lenght: 70 | Camp: id_student | Operator: = | Valoare: 1 | 
-Comanda: SELECT nume, an_studiu FROM studenti WHERE id <= 5 | Tip: SELECT | Lenght: 50 | Camp: id | Operator: <= | Valoare: 5 | 
+1 8 2.50 3.00 5.00
+Nicolescu Elena 3
+Pogoran Adrian 4
+Trandaf Denisa 1
+Ionescu Teodor 4
+Popescu Adrian 3
+Andrei Marian 3

@@ -1,10 +1,6 @@
 
 
 #include "task1.h"
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define MAX_LINE 256
 #define MAX_NAME 40
@@ -184,7 +180,7 @@ void adauga_student(secretariat *s, int id, char *nume, int an_studiu,
       .statut = statut,
       .medie_generala = medie_generala,
   };
-  strcpy(s->studenti[s->nr_studenti].nume, nume);
+  snprintf(s->studenti[s->nr_studenti].nume, strlen(nume) + 1, "%s", nume);
 }
 
 void elibereaza_secretariat(secretariat **s) {

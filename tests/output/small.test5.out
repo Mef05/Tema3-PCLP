@@ -1,2 +1,1 @@
-Comanda: UPDATE studenti SET medie_generala = 9.0 WHERE id = 0 | Tip: UPDATE | Lenght: 53 | Camp: id | Operator: = | Valoare: 0 | 
-Comanda: SELECT nume, medie_generala FROM studenti WHERE id = 0 | Tip: SELECT | Lenght: 54 | Camp: id | Operator: = | Valoare: 0 | 
+Nicolescu Elena 9.00

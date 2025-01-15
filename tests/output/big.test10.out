@@ -1,3 +1,55 @@
-Comanda: DELETE FROM materii WHERE id >= 0 | Tip: DELETE | Lenght: 33 | Camp: id | Operator: >= | Valoare: 0 | 
-Comanda: SELECT * FROM materii | Tip: SELECT | Lenght: 21 | 
-Comanda: SELECT id, nume FROM studenti WHERE an_studiu = 3 AND statut = t | Tip: SELECT | Lenght: 64 | Camp: an_studiu | Operator: = | Valoare: 3 | Camp: statut | Operator: = | Valoare: t | 
+0 USO Becali Elena
+1 PCLP1 Timu Ana
+2 SDA Pogoran Elena
+3 Fizica Grigore Bianca
+4 SO Roman Alina
+5 Analiza Pancila Iulian
+6 MN Petic Tiberiu
+7 EGC Ionescu Gabriel
+8 Algebra Lupu Ciprian
+9 PL Gheorghita Maria
+10 POO Rebej Adriana
+11 RC Munteanu Larisa
+12 IA Pogoran Teodor
+13 BD Pancila Daniela
+14 ASC Dinu Ana
+15 CN Roata Tiberiu
+16 MDS Popescu Sorina
+17 PC Dumitru Teodor
+18 SGBD Stoica Adrian
+19 PS Becali Marian
+20 ISC Pogoran Adriana
+1 Moldovan Marian
+3 Barbu Maria
+4 Mihoc Iulian
+5 Terzea Tiberiu
+8 Gheorghita Adriana
+10 Petre Sorina
+16 Riga Victor
+17 Stan Diana
+18 Becali Bianca
+19 Lupu Elena
+20 Popescu Vlad
+21 Stoica Mihai
+26 Ionescu Gabriel
+30 Dumitru Izabela
+33 Mihoc Ioana
+35 Georgescu Raluca
+44 Georgescu Florentina
+45 Roman Nicoleta
+48 Sandu Gabriel
+57 Tudor Sorina
+60 Antonescu Andrei
+63 Ionescu Sorina
+66 Pancila Adriana
+67 Tudor Stefan
+71 Stan Bianca
+72 Pancila Dragos
+75 Moldovan Bianca
+76 Merei Gabriel
+83 Petre Izabela
+88 Riga Maria
+92 Trandaf Ana
+93 Petre Tiberiu
+95 Stoica Teodor
+96 Trandaf Vlad

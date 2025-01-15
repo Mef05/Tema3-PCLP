@@ -1,5 +1,4 @@
 #include "task2.h"
-#include <stdbool.h>
 
 #define INIT_CHAR 256
 #define INIT_LINE 200
@@ -11,6 +10,19 @@ typedef struct {
   char **conditions;
   int num_of_conditions;
 } comanda;
+
+void free_comands(comanda *comands, int num_of_comands) {
+  for (int i = 0; i < num_of_comands; i++) {
+    free(comands[i].comanda);
+    if (comands[i].num_of_conditions > 0) {
+      for (int j = 0; j < comands[i].num_of_conditions; j++) {
+        free(comands[i].conditions[j]);
+      }
+      free(comands[i].conditions);
+    }
+  }
+  free(comands);
+}
 
 void dinamicaly_add_string(char ***arr, int *size, char *string) {
   if (*size == 0) {
@@ -51,25 +63,12 @@ void remove_char(char *str, char char_to_remove) {
   str[j] = '\0';
 }
 
-void free_comands(comanda *comands, int num_of_comands) {
-  for (int i = 0; i < num_of_comands; i++) {
-    free(comands[i].comanda);
-    if (comands[i].num_of_conditions > 0) {
-      for (int j = 0; j < comands[i].num_of_conditions; j++) {
-        free(comands[i].conditions[j]);
-      }
-      free(comands[i].conditions);
-    }
-  }
-  free(comands);
-}
-
 void detect_comad_type(comanda *comanda) {
-  char *comanda_copy = (char *)malloc(comanda->length * sizeof(char));
+  char *comanda_copy = (char *)malloc(comanda->length + 1 * sizeof(char));
   if (comanda_copy == NULL) {
     return;
   }
-  strcpy(comanda_copy, comanda->comanda);
+  snprintf(comanda_copy, comanda->length + 1, "%s", comanda->comanda);
 
   char *token = strtok(comanda_copy, " ");
   if (!strcmp(token, "SELECT")) {
@@ -84,11 +83,11 @@ void detect_comad_type(comanda *comanda) {
 }
 
 void extract_init_condition(comanda *comanda) {
-  char *comanda_copy = (char *)malloc(comanda->length * sizeof(char));
+  char *comanda_copy = (char *)malloc((comanda->length + 1) * sizeof(char));
   if (comanda_copy == NULL) {
     return;
   }
-  strcpy(comanda_copy, comanda->comanda);
+  snprintf(comanda_copy, comanda->length + 1, "%s", comanda->comanda);
 
   char *where = 0;
   char *and = 0;
@@ -103,6 +102,7 @@ void extract_init_condition(comanda *comanda) {
     comanda->num_of_conditions = 1;
     where = strstr(comanda_copy, "WHERE");
   } else {
+    free(comanda_copy);
     comanda->conditions = NULL;
     comanda->num_of_conditions = 0;
     return;
@@ -119,7 +119,7 @@ void extract_init_condition(comanda *comanda) {
   buffer[index] = '\0';
 
   comanda->conditions[0] = (char *)malloc((index + 1) * sizeof(char));
-  strcpy(comanda->conditions[0], buffer);
+  snprintf(comanda->conditions[0], index + 1, "%s", buffer);
 
   if (comanda->num_of_conditions == 2) {
     index = 0;
@@ -129,30 +129,30 @@ void extract_init_condition(comanda *comanda) {
     buffer[index] = '\0';
 
     comanda->conditions[1] = (char *)malloc((index + 1) * sizeof(char));
-    strcpy(comanda->conditions[1], buffer);
+    // strcpy(comanda->conditions[1], buffer);
+    snprintf(comanda->conditions[1], index + 1, "%s", buffer);
   }
+  free(comanda_copy);
 }
 
 void split_condition(const char *input, char *camp, char *operator,
                      char * valoare) {
   char buffer[INIT_CHAR];
-  char valoare_str[INIT_CHAR];
-  strncpy(buffer, input, sizeof(buffer) - 1);
-  buffer[sizeof(buffer) - 1] = '\0';
+  snprintf(buffer, strlen(input) + 1, "%s", input);
 
   char *token = strtok(buffer, " ");
   if (token != NULL) {
-    strcpy(camp, token);
+    snprintf(camp, strlen(token) + 1, "%s", token);
   }
 
   token = strtok(NULL, " ");
   if (token != NULL) {
-    strcpy(operator, token);
+    snprintf(operator, strlen(token) + 1, "%s", token);
   }
 
   token = strtok(NULL, " ");
   if (token != NULL) {
-    strcpy(valoare, token);
+    snprintf(valoare, strlen(token) + 1, "%s", token);
   }
 }
 
@@ -171,6 +171,22 @@ typedef struct {
 typedef struct {
   char *tabel;
 } deleteInfo;
+
+void free_select_info(selectInfo *info) {
+  for (int i = 0; i < info->num_of_campuri; i++) {
+    free(info->campuri[i]);
+  }
+  free(info->campuri);
+  free(info->tabel);
+}
+
+void free_update_info(updateInfo *info) {
+  free(info->tabel);
+  free(info->camp);
+  free(info->valoare);
+}
+
+void free_delete_info(deleteInfo *info) { free(info->tabel); }
 
 void extract_info(comanda comanda, void *info) {
   char *comanda_copy = (char *)malloc((comanda.length + 1) * sizeof(char));
@@ -241,6 +257,9 @@ void extract_info(comanda comanda, void *info) {
     }
 
     remove_char(uInfo.valoare, '"');
+    for (int i = 0; i < set_size; i++) {
+      free(set[i]);
+    }
     free(set);
 
     *(updateInfo *)info = uInfo;
@@ -265,7 +284,7 @@ char *intToString(int num) {
   if (str == NULL) {
     exit(1);
   }
-  sprintf(str, "%d", num);
+  snprintf(str, size, "%d", num);
   return str;
 }
 
@@ -275,7 +294,7 @@ char *floatToString(float num) {
   if (str == NULL) {
     exit(1);
   }
-  sprintf(str, "%f", num);
+  snprintf(str, size, "%f", num);
   return str;
 }
 
@@ -289,10 +308,9 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
   char valoare[INIT_CHAR];
 
   for (int i = 0; i < comanda.num_of_conditions; i++) {
-    split_condition(comanda.conditions[i - 1], camp, operator, & valoare);
+    split_condition(comanda.conditions[i], camp, operator, valoare);
 
     if (comanda.operation == SELECT) {
-
       selectInfo info =
           (selectInfo){.campuri = NULL, .num_of_campuri = 0, .tabel = NULL};
       extract_info(comanda, &info);
@@ -334,41 +352,41 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
 
         } else if (strcmp(camp, "an_studiu") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (!strcmp(s.studenti[index].an_studiu, valoare)) {
+            if (!strcmp(intToString(s.studenti[index].an_studiu), valoare)) {
               return true;
             }
           }
 
         } else if (strcmp(camp, "statut") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (s.studenti[index].statut == valoare) {
+            if (s.studenti[index].statut == valoare[0]) {
               return true;
             }
           }
 
         } else if (strcmp(camp, "medie_generala") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (s.studenti[index].medie_generala == atoi(valoare)) {
+            if (s.studenti[index].medie_generala == atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "<") == 0) {
-            if (s.studenti[index].medie_generala < atoi(valoare)) {
+            if (s.studenti[index].medie_generala < atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, ">") == 0) {
-            if (s.studenti[index].medie_generala > atoi(valoare)) {
+            if (s.studenti[index].medie_generala > atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "<=") == 0) {
-            if (s.studenti[index].medie_generala <= atoi(valoare)) {
+            if (s.studenti[index].medie_generala <= atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, ">=") == 0) {
-            if (s.studenti[index].medie_generala >= atoi(valoare)) {
+            if (s.studenti[index].medie_generala >= atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "!=") == 0) {
-            if (s.studenti[index].medie_generala != atoi(valoare)) {
+            if (s.studenti[index].medie_generala != atof(valoare)) {
               return true;
             }
           }
@@ -520,41 +538,41 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
 
         } else if (strcmp(camp, "an_studiu") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (!strcmp(s.studenti[index].an_studiu, valoare)) {
+            if (!strcmp(intToString(s.studenti[index].an_studiu), valoare)) {
               return true;
             }
           }
 
         } else if (strcmp(camp, "statut") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (s.studenti[index].statut == valoare) {
+            if (s.studenti[index].statut == valoare[0]) {
               return true;
             }
           }
 
         } else if (strcmp(camp, "medie_generala") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (s.studenti[index].medie_generala == atoi(valoare)) {
+            if (s.studenti[index].medie_generala == atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "<") == 0) {
-            if (s.studenti[index].medie_generala < atoi(valoare)) {
+            if (s.studenti[index].medie_generala < atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, ">") == 0) {
-            if (s.studenti[index].medie_generala > atoi(valoare)) {
+            if (s.studenti[index].medie_generala > atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "<=") == 0) {
-            if (s.studenti[index].medie_generala <= atoi(valoare)) {
+            if (s.studenti[index].medie_generala <= atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, ">=") == 0) {
-            if (s.studenti[index].medie_generala >= atoi(valoare)) {
+            if (s.studenti[index].medie_generala >= atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "!=") == 0) {
-            if (s.studenti[index].medie_generala != atoi(valoare)) {
+            if (s.studenti[index].medie_generala != atof(valoare)) {
               return true;
             }
           }
@@ -705,41 +723,41 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
 
         } else if (strcmp(camp, "an_studiu") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (!strcmp(s.studenti[index].an_studiu, valoare)) {
+            if (s.studenti[index].an_studiu == atoi(valoare)) {
               return true;
             }
           }
 
         } else if (strcmp(camp, "statut") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (s.studenti[index].statut == valoare) {
+            if (s.studenti[index].statut == valoare[0]) {
               return true;
             }
           }
 
         } else if (strcmp(camp, "medie_generala") == 0) {
           if (strcmp(operator, "=") == 0) {
-            if (s.studenti[index].medie_generala == atoi(valoare)) {
+            if (s.studenti[index].medie_generala == atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "<") == 0) {
-            if (s.studenti[index].medie_generala < atoi(valoare)) {
+            if (s.studenti[index].medie_generala < atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, ">") == 0) {
-            if (s.studenti[index].medie_generala > atoi(valoare)) {
+            if (s.studenti[index].medie_generala > atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "<=") == 0) {
-            if (s.studenti[index].medie_generala <= atoi(valoare)) {
+            if (s.studenti[index].medie_generala <= atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, ">=") == 0) {
-            if (s.studenti[index].medie_generala >= atoi(valoare)) {
+            if (s.studenti[index].medie_generala >= atof(valoare)) {
               return true;
             }
           } else if (strcmp(operator, "!=") == 0) {
-            if (s.studenti[index].medie_generala != atoi(valoare)) {
+            if (s.studenti[index].medie_generala != atof(valoare)) {
               return true;
             }
           }
@@ -850,6 +868,7 @@ bool verify_conditions(comanda comanda, secretariat s, int index) {
       }
     }
   }
+  return false;
 }
 
 void apply_comand(comanda comanda, secretariat *s) {
@@ -857,6 +876,137 @@ void apply_comand(comanda comanda, secretariat *s) {
     selectInfo info =
         (selectInfo){.campuri = NULL, .num_of_campuri = 0, .tabel = NULL};
     extract_info(comanda, &info);
+
+    if (!strcmp(info.tabel, "studenti")) {
+      for (int j = 0; j < s->nr_studenti; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          for (int i = 0; i < info.num_of_campuri; i++) {
+            if (i) {
+              printf(" ");
+            }
+            if (!strcmp(info.campuri[i], "*")) {
+              printf("%d %s %d %c %.2f", s->studenti[j].id, s->studenti[j].nume,
+                     s->studenti[j].an_studiu, s->studenti[j].statut,
+                     s->studenti[j].medie_generala);
+            }
+            if (!strcmp(info.campuri[i], "id")) {
+              printf("%d", s->studenti[j].id);
+            }
+            if (!strcmp(info.campuri[i], "nume")) {
+              printf("%s", s->studenti[j].nume);
+            }
+            if (!strcmp(info.campuri[i], "an_studiu")) {
+              printf("%d", s->studenti[j].an_studiu);
+            }
+            if (!strcmp(info.campuri[i], "statut")) {
+              printf("%c", s->studenti[j].statut);
+            }
+            if (!strcmp(info.campuri[i], "medie_generala")) {
+              printf("%.2f", s->studenti[j].medie_generala);
+            }
+          }
+          printf("\n");
+        }
+      }
+    } else if (!strcmp(info.tabel, "materii")) {
+      for (int j = 0; j < s->nr_materii; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          for (int i = 0; i < info.num_of_campuri; i++) {
+            if (i) {
+              printf(" ");
+            }
+            if (!strcmp(info.campuri[i], "*")) {
+              printf("%d %s %s", s->materii[j].id, s->materii[j].nume,
+                     s->materii[j].nume_titular);
+            }
+            if (!strcmp(info.campuri[i], "id")) {
+              printf("%d", s->materii[j].id);
+            }
+            if (!strcmp(info.campuri[i], "nume")) {
+              printf("%s", s->materii[j].nume);
+            }
+            if (!strcmp(info.campuri[i], "nume_titular")) {
+              printf("%s", s->materii[j].nume_titular);
+            }
+          }
+          printf("\n");
+        }
+      }
+    } else if (!strcmp(info.tabel, "inrolari")) {
+      for (int j = 0; j < s->nr_inrolari; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          for (int i = 0; i < info.num_of_campuri; i++) {
+            if (i) {
+              printf(" ");
+            }
+            if (!strcmp(info.campuri[i], "*")) {
+              printf("%d %d %.2f %.2f %.2f", s->inrolari[j].id_student,
+                     s->inrolari[j].id_materie, s->inrolari[j].note[0],
+                     s->inrolari[j].note[1], s->inrolari[j].note[2]);
+            }
+            if (!strcmp(info.campuri[i], "id_student")) {
+              printf("%d", s->inrolari[j].id_student);
+            }
+            if (!strcmp(info.campuri[i], "id_materie")) {
+              printf("%d", s->inrolari[j].id_materie);
+            }
+            if (!strcmp(info.campuri[i], "note")) {
+              printf("%.2f %.2f %.2f", s->inrolari[j].note[0],
+                     s->inrolari[j].note[1], s->inrolari[j].note[2]);
+            }
+          }
+          printf("\n");
+        }
+      }
+    }
+    free_select_info(&info);
+  } else if (comanda.operation == UPDATE) {
+    updateInfo info =
+        (updateInfo){.tabel = NULL, .camp = NULL, .valoare = NULL};
+    extract_info(comanda, &info);
+
+    if (!strcmp(info.tabel, "studenti")) {
+      for (int j = 0; j < s->nr_studenti; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          if (!strcmp(info.camp, "nume")) {
+            snprintf(s->studenti[j].nume, strlen(info.valoare) + 1, "%s",
+                     info.valoare);
+          } else if (!strcmp(info.camp, "an_studiu")) {
+            s->studenti[j].an_studiu = atoi(info.valoare);
+          } else if (!strcmp(info.camp, "statut")) {
+            s->studenti[j].statut = info.valoare[0];
+          } else if (!strcmp(info.camp, "medie_generala")) {
+            s->studenti[j].medie_generala = (float)atof(info.valoare);
+          }
+        }
+      }
+    } else if (!strcmp(info.tabel, "materii")) {
+      for (int j = 0; j < s->nr_materii; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          if (!strcmp(info.camp, "nume")) {
+            snprintf(s->materii[j].nume, strlen(info.valoare) + 1, "%s",
+                     info.valoare);
+          } else if (!strcmp(info.camp, "nume_titular")) {
+            snprintf(s->materii[j].nume_titular, strlen(info.valoare) + 1, "%s",
+                     info.valoare);
+          }
+        }
+      }
+    } else if (!strcmp(info.tabel, "inrolari")) {
+      for (int j = 0; j < s->nr_inrolari; j++) {
+        if (verify_conditions(comanda, *s, j)) {
+          if (!strcmp(info.camp, "note")) {
+            float note[NUMBER_OF_GRADES] = {0, 0, 0};
+            sscanf(info.valoare, "%f %f %f", &note[0], &note[1], &note[2]);
+            s->inrolari[j].note[0] = note[0];
+            s->inrolari[j].note[1] = note[1];
+            s->inrolari[j].note[2] = note[2];
+
+            float medie = (note[0] + note[1] + note[2]) / 3;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -898,12 +1048,17 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < index; j++) {
       comands[i].comanda[j] = buffer[j];
     }
-    comands[i].length = index;
+    comands[i].comanda[index] = '\0';
+    comands[i].length = (int)strlen(comands[i].comanda);
     detect_comad_type(&comands[i]);
     extract_init_condition(&comands[i]);
   }
 
   free(buffer);
+
+  for (int i = 0; i < num_of_comands; i++) {
+    apply_comand(comands[i], s);
+  }
 
   // for (int i = 0; i < num_of_comands; i++) {
   //   printf("Comanda: %s | Tip: %s | Lenght: %d | ", comands[i].comanda,
@@ -913,18 +1068,22 @@ int main(int argc, char *argv[]) {
   //          comands[i].length);
 
   //   for (int j = 0; j < comands[i].num_of_conditions; j++) {
+  //     printf("Condition: %s ", comands[i].conditions[j]);
+  //   }
+  //   for (int j = 0; j < comands[i].num_of_conditions; j++) {
   //     char camp[INIT_CHAR];
   //     char operator[INIT_CHAR];
   //     char valoare[INIT_CHAR];
 
-  //     split_condition(comands[i].conditions[j], camp, operator, & valoare);
-  //     printf("Camp: %s | Operator: %s | Valoare: %s | ", camp, operator,
+  //     split_condition(comands[i].conditions[j], camp, operator, &
+  //     valoare); printf("Camp: %s | Operator: %s | Valoare: %s | ", camp,
+  //     operator,
   //            valoare);
   //   }
 
   //   printf("\n");
   // }
-
+  elibereaza_secretariat(&s);
   free_comands(comands, num_of_comands);
   return 0;
 }
